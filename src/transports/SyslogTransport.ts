@@ -45,8 +45,9 @@ export class SyslogTransport implements Transport {
 
   write(logData: LogData, formatter: Formatter): void {
     const formatted = formatter.format(logData);
+    const messageStr = typeof formatted === 'string' ? formatted : logData.message;
     const pri = (this.facility * 8) + (SYSLOG_LEVELS[logData.level] ?? 6);
-    const msg = `<${pri}>1 ${logData.timestamp.toISOString()} ${this.hostname} ${this.appName} - - ${typeof formatted === 'string' ? formatted : formatted.message}`;
+    const msg = `<${pri}>1 ${logData.timestamp.toISOString()} ${this.hostname} ${this.appName} - - ${messageStr}`;
     const buffer = Buffer.from(msg, "utf8");
     
     if (this.useUDP) {
