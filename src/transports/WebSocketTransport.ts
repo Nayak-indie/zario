@@ -26,15 +26,17 @@ export class WebSocketTransport extends Transport {
 
   private connect(): void {
     try {
-      const WebSocketClient = require('ws');
-      this.socket = new WebSocketClient(this.url);
-      this.socket.on('open', () => { this.isConnected = true; });
-      this.socket.on('close', () => { this.isConnected = false; });
-      this.socket.on('error', (err) => { console.error('[WebSocket]', err.message); });
+      // Use dynamic import for ws
+      import('ws').then((ws) => {
+        this.socket = new ws.default(this.url);
+        this.socket.on('open', () => { this.isConnected = true; });
+        this.socket.on('close', () => { this.isConnected = false; });
+        this.socket.on('error', (err: Error) => { console.error('[WebSocket]', err.message); });
+      }).catch((e) => { console.error('[WebSocket] Failed to connect:', e); });
     } catch (e) { console.error('[WebSocket] Failed to connect:', e); }
   }
 
-  write(logData: LogData, formatter: Formatter): void {
+  write(logData: LogData, _formatter: Formatter): void {
     if (this.isConnected && this.socket) {
       this.socket.send(JSON.stringify(logData));
     }

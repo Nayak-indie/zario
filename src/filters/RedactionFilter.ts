@@ -3,7 +3,7 @@
  * Auto-redact PII (emails, phones, credit cards) from logs
  */
 
-import { Filter, FilterResult } from './Filter.js';
+import { Filter } from './Filter.js';
 import { LogData } from '../types/index.js';
 
 export interface RedactionFilterOptions {

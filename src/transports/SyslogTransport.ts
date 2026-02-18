@@ -6,6 +6,7 @@
 import { Transport, TransportOptions } from './Transport.js';
 import { LogData } from '../types/index.js';
 import { Formatter } from '../core/Formatter.js';
+import * as os from 'os';
 
 export interface SyslogTransportOptions extends TransportOptions {
   facility?: 'kern' | 'user' | 'mail' | 'daemon' | 'auth' | 'syslog' | 'lpr' | 'news' | 'uucp' | 'cron' | 'authpriv' | 'ftp' | 'local0' | 'local1' | 'local2' | 'local3' | 'local4' | 'local5' | 'local6' | 'local7';
@@ -30,7 +31,7 @@ export class SyslogTransport extends Transport {
   private appName: string;
   private host: string;
   private port: number;
-  private socket: any = null;
+  private useUDP: boolean;
   private hostname: string;
 
   constructor(options: SyslogTransportOptions = {}) {
@@ -40,7 +41,7 @@ export class SyslogTransport extends Transport {
     this.host = options.host ?? 'localhost';
     this.port = options.port ?? 514;
     this.useUDP = options.useUDP ?? true;
-    this.hostname = require('os').hostname();
+    this.hostname = os.hostname();
   }
 
   write(logData: LogData, formatter: Formatter): void {
@@ -50,17 +51,15 @@ export class SyslogTransport extends Transport {
     const buffer = Buffer.from(msg, 'utf8');
     
     if (this.useUDP) {
-      const dgram = require('dgram');
-      const sock = dgram.createSocket('udp4');
-      sock.send(buffer, 0, buffer.length, this.port, this.host);
-      sock.close();
+      import('dgram').then((dgram) => {
+        const sock = dgram.createSocket('udp4');
+        sock.send(buffer, 0, buffer.length, this.port, this.host);
+        sock.close();
+      }).catch((e) => { console.error('[SyslogTransport] Send error:', e); });
     }
   }
 
   close(): void {
-    if (this.socket) {
-      this.socket.close();
-      this.socket = null;
-    }
+    // Cleanup if needed
   }
 }

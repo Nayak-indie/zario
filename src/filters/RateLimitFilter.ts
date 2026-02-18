@@ -24,7 +24,7 @@ export class RateLimitFilter implements Filter {
     this.lastRefill = Date.now();
   }
 
-  shouldEmit(logData: LogData): boolean {
+  shouldEmit(_logData: LogData): boolean {
     const now = Date.now();
     const elapsed = (now - this.lastRefill) / 1000;
     this.tokens = Math.min(this.burst, this.tokens + elapsed * this.maxPerSecond);
