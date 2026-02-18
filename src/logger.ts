@@ -6,6 +6,7 @@ export type { LogLevel } from "./core/LogLevel.js";
 
 // Additional exports for slim entrypoint
 export { ConsoleTransport } from "./transports/ConsoleTransport.js";
-export type { Transport, TransportConfig } from "./types/index.js";
+export { Transport } from "./transports/Transport.js";
+export type { TransportConfig } from "./types/index.js";
 
 export default Logger;

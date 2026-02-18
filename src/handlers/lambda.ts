@@ -20,18 +20,19 @@ export function lambdaHandler(options: LambdaHandlerOptions = {}) {
     ...options
   });
 
-  logger.addEnricher({
-    enrich(logData: any) {
-      logData.metadata = logData.metadata || {};
-      logData.metadata.aws = {
-        functionName: process.env.AWS_LAMBDA_FUNCTION_NAME || 'unknown',
-        functionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION || 'unknown',
-        memoryLimit: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE || 'unknown',
-      };
-      logData.metadata.requestId = process.env.AWS_REQUEST_ID || 'unknown';
-      return logData;
-    }
-  });
+  // Add Lambda enricher as a function
+  const lambdaEnricher = (logData: any) => {
+    logData.metadata = logData.metadata || {};
+    logData.metadata.aws = {
+      functionName: process.env.AWS_LAMBDA_FUNCTION_NAME || 'unknown',
+      functionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION || 'unknown',
+      memoryLimit: process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE || 'unknown',
+    };
+    logData.metadata.requestId = process.env.AWS_REQUEST_ID || 'unknown';
+    return logData;
+  };
+  
+  logger.addEnricher(lambdaEnricher);
 
   return async (event: any, context: any) => {
     const startTime = Date.now();

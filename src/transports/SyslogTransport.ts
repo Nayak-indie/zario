@@ -3,13 +3,13 @@
  * Native syslog support for Unix/Linux systems (RFC 5424)
  */
 
-import { Transport, TransportOptions } from './Transport.js';
-import { LogData } from '../types/index.js';
-import { Formatter } from '../core/Formatter.js';
-import * as os from 'os';
+import { Transport } from "./Transport.js";
+import { LogData } from "../types/index.js";
+import { Formatter } from "../core/Formatter.js";
+import * as os from "os";
 
-export interface SyslogTransportOptions extends TransportOptions {
-  facility?: 'kern' | 'user' | 'mail' | 'daemon' | 'auth' | 'syslog' | 'lpr' | 'news' | 'uucp' | 'cron' | 'authpriv' | 'ftp' | 'local0' | 'local1' | 'local2' | 'local3' | 'local4' | 'local5' | 'local6' | 'local7';
+export interface SyslogTransportOptions {
+  facility?: "kern" | "user" | "mail" | "daemon" | "auth" | "syslog" | "lpr" | "news" | "uucp" | "cron" | "authpriv" | "ftp" | "local0" | "local1" | "local2" | "local3" | "local4" | "local5" | "local6" | "local7";
   appName?: string;
   host?: string;
   port?: number;
@@ -26,7 +26,7 @@ const SYSLOG_LEVELS: Record<string, number> = {
   debug: 7, info: 6, notice: 5, warn: 4, error: 3, critical: 2, alert: 1, fatal: 0
 };
 
-export class SyslogTransport extends Transport {
+export class SyslogTransport implements Transport {
   private facility: number;
   private appName: string;
   private host: string;
@@ -35,10 +35,9 @@ export class SyslogTransport extends Transport {
   private hostname: string;
 
   constructor(options: SyslogTransportOptions = {}) {
-    super(options);
-    this.facility = FACILITY_CODES[options.facility ?? 'local0'];
-    this.appName = options.appName ?? 'zario';
-    this.host = options.host ?? 'localhost';
+    this.facility = FACILITY_CODES[options.facility ?? "local0"] ?? 16;
+    this.appName = options.appName ?? "zario";
+    this.host = options.host ?? "localhost";
     this.port = options.port ?? 514;
     this.useUDP = options.useUDP ?? true;
     this.hostname = os.hostname();
@@ -47,19 +46,15 @@ export class SyslogTransport extends Transport {
   write(logData: LogData, formatter: Formatter): void {
     const formatted = formatter.format(logData);
     const pri = (this.facility * 8) + (SYSLOG_LEVELS[logData.level] ?? 6);
-    const msg = `<${pri}>1 ${logData.timestamp.toISOString()} ${this.hostname} ${this.appName} - - ${formatted.message}`;
-    const buffer = Buffer.from(msg, 'utf8');
+    const msg = `<${pri}>1 ${logData.timestamp.toISOString()} ${this.hostname} ${this.appName} - - ${typeof formatted === 'string' ? formatted : formatted.message}`;
+    const buffer = Buffer.from(msg, "utf8");
     
     if (this.useUDP) {
-      import('dgram').then((dgram) => {
-        const sock = dgram.createSocket('udp4');
+      import("dgram").then((dgram) => {
+        const sock = dgram.createSocket("udp4");
         sock.send(buffer, 0, buffer.length, this.port, this.host);
         sock.close();
-      }).catch((e) => { console.error('[SyslogTransport] Send error:', e); });
+      }).catch(() => { /* ignore */ });
     }
-  }
-
-  close(): void {
-    // Cleanup if needed
   }
 }
