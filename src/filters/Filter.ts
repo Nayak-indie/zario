@@ -5,6 +5,12 @@ export interface Filter {
   shouldEmit(logData: LogData): boolean;
 }
 
+export enum FilterResult {
+  PASS = 0,
+  DROP = 1,
+  MODIFY = 2
+}
+
 export type FilterPredicate = (logData: LogData) => boolean;
 
 export class CompositeFilter implements Filter {
